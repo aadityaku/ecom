@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-8">
+            {% for order_item in object.items.all %}
+            <div class="media d-block mt-3">
+                <img src="{{order_item.image.url}}" alt="" class="media-image d-block shadow">
+                <h5>{{order_item.item.title}}</h5>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock  %}
