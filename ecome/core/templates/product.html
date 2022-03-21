@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-3">
+
+    <div class="row">
+        
+       
+        <div class="col-10">
+            <div class="row">
+                
+                        <div class="col-3">
+                            <img src="{{object.image.url}}" class="card-img-top" alt="" style="height:350px;width:250px">
+                        </div>
+                        <div class="col-9">
+                            <div class="card shadow-lg">
+                                
+                                <div class="card-body">
+                                    <h6>{{object.title}}</h6>
+                                    <h6>{{object.category.title}}</h6>
+                                    <h6>{{object.discount_price}}     <del>{{object.price}}</del></h6>
+
+                                    <a href="" class="btn btn-danger float-end">Add to Cart</a>
+                                    <a href="" class="btn btn-success float-start">Buy now</a>
+                                    
+                                  
+                                </div>
+                            </div>
+                        </div>
+               
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                
+                {% for item in items %}
+                    {% comment %} {% if  object.category.id == item.category.id  %}  {% endcomment %}
+                        <div class="col-3">
+                            <div class="card shadow-lg">
+                                <img src="{{item.image.url}}" class="card-img-top" alt="" style="height:270px;width:302px" >
+                                <div class="card-body">
+                                    <h6>{{ item.get_category_display }}</h6>
+                                    <h6>
+                                        <a href="{{ item.get_absolute_url }}" class="text-truncate text-capitalize text-decoration-none">{{item.title}}</a>
+                                    </h6>
+                                  
+                                </div>
+                            </div>
+                        </div>
+                         {% comment %} {% endif %}  {% endcomment %}
+                {% endfor %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
