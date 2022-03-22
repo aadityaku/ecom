@@ -17,19 +17,23 @@
                   </span>
                   <span class="d-block my-2">
                       {% if order_item.item.discount_price %}
-                        <p class="text-dark h5 fw-bold d-inline">Rs.{{order_item.item.discount_price}}</p>
-                        <p class="text-dark h5 fw-normal d-inline"><del>Rs.{{order_item.item.price}}</del></p>
+                        <p class="text-dark h5 fw-bold d-inline">Rs.{{order_item.get_total_discount_price}}</p>
+                        <p class="text-dark h5 fw-normal d-inline"><del>Rs.{{order_item.get_total_price}}</del></p>
                       {% else %}
                       <p class="text-dark h5 fw-normal d-inline">Rs.{{order_item.item.price}}</p>
                       {% endif %}
                   </span>
                   <span class="d-inline-block">
-                      <a href="" class="btn btn-danger fw-bolder">-</a>
+                      {% if order_item.qty == 1 %}
+                      <a href="{% url 'core:delete-from-cart' order_item.item.slug %}" class="btn btn-danger fw-bolder">-</a>
+                      {% else %}
+                      <a href="{% url 'core:remove-from-cart' order_item.item.slug %}" class="btn btn-danger fw-bolder">-</a>
+                      {% endif %}
                       <span class="">{{order_item.qty}}</span>
                       <a href="{% url 'core:add-to-cart' order_item.item.slug %}" class="btn btn-warning fw-bolder">+</a>
                   </span>
                   <div class="d-inlin-block mt-2">
-                      <a href="" class="btn btn-secondary ">Remove</a>
+                      <a href="{% url 'core:delete-from-cart' order_item.item.slug %}" class="btn btn-secondary ">Remove</a>
                   </div>
                 </div>
             </div>

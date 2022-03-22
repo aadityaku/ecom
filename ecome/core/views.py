@@ -62,7 +62,7 @@ class AddToCart(LoginRequiredMixin,View):
                 order_item.qty +=1
                 order_item.save()
                 return redirect("core:order-summary")
-                #not working
+                
             else:
                 order.items.add(order_item)
                 
@@ -91,3 +91,36 @@ class OrderSummary(View):
     
     model=Order
     template_name="order_summary.html"
+class RemoveFromCart(LoginRequiredMixin,View):
+    def get(self,request,slug,*args,**kwargs):
+        item=get_object_or_404(Item,slug=slug)
+        order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
+        order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
+
+        if order_qs.exists():
+            order=order_qs[0]
+            if order.items.filter(item__slug=item.slug):
+                order_item.qty -=1
+                order_item.save()
+                return redirect("core:order-summary")
+            else:
+                return redirect("core:order-summary")
+        else:
+            return redirect("core:order-summary")
+        
+def RemoveItem(request,slug):
+    item=get_object_or_404(Item,slug=slug)
+    order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
+    order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
+    if order_qs.exists():
+        order=order_qs[0]
+        if order.items.filter(item__slug=item.slug):
+            order_item.delete()
+            
+            return redirect("core:order-summary")
+        else:
+            return redirect("core:order-summary")
+    else:
+        return redirect("core:order-summary")
+
+

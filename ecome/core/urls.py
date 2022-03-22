@@ -8,4 +8,6 @@ urlpatterns = [
     path("category/<slug>/",CategoryView.as_view(),name="category"),
     path("order-summary/",OrderSummary.as_view(),name="order-summary"),
     path("add-to-cart/<slug>/",AddToCart.as_view(),name="add-to-cart"),
+    path("remove-from-cart/<slug>/",RemoveFromCart.as_view(),name="remove-from-cart"),
+    path("delete-from-cart/<slug>/",RemoveItem,name="delete-from-cart"),
 ]

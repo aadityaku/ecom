@@ -86,7 +86,11 @@ class OrderItem(models.Model):
     item=models.ForeignKey(Item,on_delete=models.CASCADE)
     qty=models.IntegerField(default=1)
     item_variations=models.ManyToManyField(ItemVariation)
-
+    
+    def get_total_price(self):
+        return self.qty * self.item.price
+    def get_total_discount_price(self):
+        return self.qty * self.item.discount_price
     
 ############
 
