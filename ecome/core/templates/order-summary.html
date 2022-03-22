@@ -4,9 +4,34 @@
     <div class="row">
         <div class="col-8">
             {% for order_item in object.items.all %}
-            <div class="media d-block mt-3">
-                <img src="{{order_item.image.url}}" alt="" class="media-image d-block shadow">
-                <h5>{{order_item.item.title}}</h5>
+            <div class="media  mt-3 d-md-flex shadow p-2 d-block">
+                <img src="{{order_item.item.image.url}}" width="120px" class="media-image d-block shadow" alt="">
+                <div class="media-body ps-3">
+                    <h5 class="mt-5 fw-bolder">{{order_item.item.title}}</h5>
+                  <span class="d-block">
+                    {% if order_item.item_variations.exists %}
+                    {% for foo in order_item.item_variations.all %}
+                    <small class="text-muted">{{foo.variation.name}}:{{foo.value}}</small>
+                    {% endfor %}
+                    {% endif %}
+                  </span>
+                  <span class="d-block my-2">
+                      {% if order_item.item.discount_price %}
+                        <p class="text-dark h5 fw-bold d-inline">Rs.{{order_item.item.discount_price}}</p>
+                        <p class="text-dark h5 fw-normal d-inline"><del>Rs.{{order_item.item.price}}</del></p>
+                      {% else %}
+                      <p class="text-dark h5 fw-normal d-inline">Rs.{{order_item.item.price}}</p>
+                      {% endif %}
+                  </span>
+                  <span class="d-inline-block">
+                      <a href="" class="btn btn-danger fw-bolder">-</a>
+                      <span class="">{{order_item.qty}}</span>
+                      <a href="{% url 'core:add-to-cart' order_item.item.slug %}" class="btn btn-warning fw-bolder">+</a>
+                  </span>
+                  <div class="d-inlin-block mt-2">
+                      <a href="" class="btn btn-secondary ">Remove</a>
+                  </div>
+                </div>
             </div>
             {% endfor %}
         </div>

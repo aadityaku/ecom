@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic import ListView,DetailView,View
 from .models import Item, ItemVariation, OrderItem,Order,Variation,Category
+from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
 class HomeView(ListView):
     model=Item
@@ -45,7 +46,7 @@ class ItemDetailsView(DetailView):
 
         return context
 
-class AddToCart(View):
+class AddToCart(LoginRequiredMixin,View):
     def get(self,request,slug,*args,**kwargs):
         item=get_object_or_404(Item,slug=slug)
         order_item,created=OrderItem.objects.get_or_create(item=item,user=request.user,ordered=False)
@@ -57,21 +58,23 @@ class AddToCart(View):
 
         if order_qs.exists():
             order = order_qs[0]
-            if order.items.filter(user=request.user,ordered=False):
+            if order.items.filter(item__slug=item.slug).exists():
                 order_item.qty +=1
                 order_item.save()
                 return redirect("core:order-summary")
                 #not working
             else:
                 order.items.add(order_item)
+                
                 for v in var:
                     a=ItemVariation.objects.get(value=v,variation__item__slug=item.slug)
                     
                     order_item.item_variations.add(a)
-                    return redirect("core:order-summary")
+                    
+                return redirect("core:order-summary")
         else:
             ordered_date=timezone.now()
-            order=Order.objects.create(user=request.user,ordered_date=ordered_date)
+            order=Order.objects.create(user=request.user,start_date=ordered_date)
             order.items.add(order_item)
             return redirect("core:order-summary")
 
@@ -79,7 +82,9 @@ class OrderSummary(View):
     def get(self,*args,**kwargs):
         try:
             order=Order.objects.get(user=self.request.user,ordered=False)
+          
             context={"object":order}
+            #print(context)
         except ObjectDoesNotExist:
             return redirect("core:homepage")
         return render(self.request,"order-summary.html",context)
