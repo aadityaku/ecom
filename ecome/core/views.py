@@ -1,5 +1,6 @@
 
 from pyexpat import model
+from urllib import request
 from django.core.exceptions import ObjectDoesNotExist
 from re import template
 from django.utils import timezone
@@ -18,21 +19,17 @@ class HomeView(ListView):
     def get_context_data(self):
         context=super(HomeView,self).get_context_data()
         context['categories'] = Category.objects.all()
-
+        context['count']=OrderItem.objects.filter(ordered=False).count()
         return context
-class CategoryView(ListView):
-    model=Item
-    template_name="index.html"
-    slug_url_kwarg="slug"
-    def get_context_data(self,slug,*args,**kwargs):
-        a=get_object_or_404(Category,title=slug)
-       
-        context=super(CategoryView,self).get_context_data(*args,**kwargs)
-        #context['object_list']=Item.objects.filter(category=a)
-        
-        context['categories'] = Category.objects.all()
+#not working
+def CategoryView(request,slug):
+    a=Category.objects.get(pk=slug)
+    
+    context={"object_list":Item.objects.filter(category=a)}
+    
+    context= {"categories":Category.objects.all()}
 
-        return context
+    return render(request,"index.html",context)
 class ItemDetailsView(DetailView):
     model=Item
   
@@ -42,7 +39,7 @@ class ItemDetailsView(DetailView):
     def get_context_data(self,*args,**kwargs):
         context=super(ItemDetailsView,self).get_context_data(*args,**kwargs)
         context['items'] = Item.objects.exclude(slug=self.kwargs['slug'])
-        
+        #context['count']=OrderItem.objects.filter(user=self.request.user,ordered=False).count()
 
         return context
 
@@ -82,11 +79,12 @@ class OrderSummary(View):
     def get(self,*args,**kwargs):
         try:
             order=Order.objects.get(user=self.request.user,ordered=False)
-          
+            
             context={"object":order}
             #print(context)
         except ObjectDoesNotExist:
             return redirect("core:homepage")
+        context['count']=OrderItem.objects.filter(user=self.request.user,ordered=False).count()
         return render(self.request,"order-summary.html",context)
     
     model=Order
