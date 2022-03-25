@@ -8,7 +8,7 @@ from turtle import title
 from unicodedata import category
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
-from django.views.generic import ListView,DetailView,View
+from django.views.generic import ListView,DetailView,View,UpdateView
 from .models import Item, ItemVariation, OrderItem,Order,Variation,Category
 from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
@@ -75,50 +75,94 @@ class AddToCart(LoginRequiredMixin,View):
             order.items.add(order_item)
             return redirect("core:order-summary")
 
-class OrderSummary(View):
+class OrderSummary(LoginRequiredMixin,View):
     def get(self,*args,**kwargs):
         try:
             order=Order.objects.get(user=self.request.user,ordered=False)
-            
+            if order.items.count()<1:
+                return redirect("core:homepage")
             context={"object":order}
             #print(context)
         except ObjectDoesNotExist:
             return redirect("core:homepage")
-        context['count']=OrderItem.objects.filter(user=self.request.user,ordered=False).count()
+        
         return render(self.request,"order-summary.html",context)
     
     model=Order
     template_name="order_summary.html"
+#class RemoveFromCart(LoginRequiredMixin,View):
+    #def get(self,request,slug,*args,**kwargs):
+        #item=get_object_or_404(Item,slug=slug)
+        #order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
+        #order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
+
+        #if order_qs.exists():
+            #order=order_qs[0]
+            #if order.items.filter(item__slug=item.slug):
+                #order_item.qty -=1
+                #order_item.save()
+                #return redirect("core:order-summary")
+            #else:
+                #return redirect("core:order-summary")
+        #else:
+            #return redirect("core:order-summary")
 class RemoveFromCart(LoginRequiredMixin,View):
     def get(self,request,slug,*args,**kwargs):
         item=get_object_or_404(Item,slug=slug)
-        order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
-        order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
-
+        order_qs=Order.objects.filter(user=request.user,ordered=False)
+        
         if order_qs.exists():
-            order=order_qs[0]
-            if order.items.filter(item__slug=item.slug):
-                order_item.qty -=1
-                order_item.save()
+            order = order_qs[0]
+            if order.items.filter(item__slug=item.slug).exists():
+                order_item=OrderItem.objects.filter(item=item,user=request.user,ordered=False)[0]
+                order.items.remove(order_item)
+                order_item.delete()
                 return redirect("core:order-summary")
+                
             else:
                 return redirect("core:order-summary")
         else:
             return redirect("core:order-summary")
-        
-def RemoveItem(request,slug):
-    item=get_object_or_404(Item,slug=slug)
-    order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
-    order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
-    if order_qs.exists():
-        order=order_qs[0]
-        if order.items.filter(item__slug=item.slug):
-            order_item.delete()
+    
+#def RemoveItem(request,slug):
+    #item=get_object_or_404(Item,slug=slug)
+    #order_item=OrderItem.objects.get(item=item,user=request.user,ordered=False)
+    #order_qs=Order.objects.filter(user=request.user,ordered=False,items=order_item)
+    #if order_qs.exists():
+        #order=order_qs[0]
+        #if order.items.filter(item__slug=item.slug):
+            #order_item.delete()
             
-            return redirect("core:order-summary")
+            #return redirect("core:order-summary")
+        #else:
+            #return redirect("core:order-summary")
+    #else:
+        #return redirect("core:order-summary")
+class MinusItemCart(LoginRequiredMixin,View):
+    def get(self,request,slug,*args,**kwargs):
+        item=get_object_or_404(Item,slug=slug)
+        order_item,created=OrderItem.objects.get_or_create(user=request.user,ordered=False,item=item)
+        #for varient
+        var=[]
+        varient=Variation.objects.filter(item=item)
+        for v in varient:
+            var.append(request.GET.get(v.name,None))
+        order_qs=Order.objects.filter(user=request.user,ordered=False)
+        if order_qs.exists():
+            order=order_qs[0]
+            if order.items.filter(item__slug=item.slug).exists():
+                if order_item.qty > 1:
+                    order_item.qty -=1
+                    order_item.save()
+                else:
+                    order_item.delete()
+                return redirect("core:order-summary")
         else:
             return redirect("core:order-summary")
-    else:
-        return redirect("core:order-summary")
+
+
+
+
+
 
 

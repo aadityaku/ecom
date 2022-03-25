@@ -83,14 +83,28 @@ class ItemVariation(models.Model):
 class OrderItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     ordered=models.BooleanField(default=False)
-    item=models.ForeignKey(Item,on_delete=models.CASCADE)
+    item=models.ForeignKey(Item,on_delete=models.CASCADE)          
     qty=models.IntegerField(default=1)
     item_variations=models.ManyToManyField(ItemVariation)
     
     def get_total_price(self):
         return self.qty * self.item.price
+
+    
+
     def get_total_discount_price(self):
         return self.qty * self.item.discount_price
+
+    def get_final_price(self):
+        if self.item.discount_price:
+            return self.get_total_discount_price()
+        else:
+            return self.get_total_price()
+    def get_saved_amount(self):
+        return self.get_total_price() - self.get_total_discount_price()
+    
+    def total_discount_percent(self):
+        return int(100-(self.item.discount_price/self.item.price)*100)
     
 ############
 
@@ -110,6 +124,25 @@ class Order(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    def get_total(self):
+        total=0
+        for order_item in self.items.all():
+            total +=order_item.get_final_price()
+        if self.coupon:
+            total -= self.coupon.amount
+        return total
+    def get_total_tax(self): 
+        total=self.get_total()
+        return round(0.18 * total)
+    def get_total_discount_amount(self):
+        total=0
+        for order_item in self.items.all():
+            total += order_item.get_saved_amount()
+        return total
+    
+    def get_payable_amount(self):
+        return self.get_total_tax() + self.get_total()
 ##################
 CITY_CHOICE=(
     ("PR","purnea"),

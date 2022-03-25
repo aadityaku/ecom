@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container">
+<div class="container-fluid g-3">
     <div class="row">
         <div class="col-8">
             {% for order_item in object.items.all %}
@@ -17,27 +17,62 @@
                   </span>
                   <span class="d-block my-2">
                       {% if order_item.item.discount_price %}
-                        <p class="text-dark h5 fw-bold d-inline">Rs.{{order_item.get_total_discount_price}}</p>
+                        <p class="text-dark h5 fw-bold d-inline">Rs.{{ order_item.get_total_discount_price }}</p>
                         <p class="text-dark h5 fw-normal d-inline"><del>Rs.{{order_item.get_total_price}}</del></p>
+                        <p class="text-success fw-bold">Total Saved Amount: Rs.{{order_item.get_saved_amount}}({{order_item.total_discount_percent}}%)</p>
                       {% else %}
                       <p class="text-dark h5 fw-normal d-inline">Rs.{{order_item.item.price}}</p>
                       {% endif %}
                   </span>
                   <span class="d-inline-block">
-                      {% if order_item.qty == 1 %}
                       <a href="{% url 'core:delete-from-cart' order_item.item.slug %}" class="btn btn-danger fw-bolder">-</a>
-                      {% else %}
-                      <a href="{% url 'core:remove-from-cart' order_item.item.slug %}" class="btn btn-danger fw-bolder">-</a>
-                      {% endif %}
+                      
                       <span class="">{{order_item.qty}}</span>
                       <a href="{% url 'core:add-to-cart' order_item.item.slug %}" class="btn btn-warning fw-bolder">+</a>
                   </span>
                   <div class="d-inlin-block mt-2">
-                      <a href="{% url 'core:delete-from-cart' order_item.item.slug %}" class="btn btn-secondary ">Remove</a>
+                      <a href="{% url 'core:remove-from-cart' order_item.item.slug %}" class="btn btn-secondary ">Remove</a>
                   </div>
                 </div>
             </div>
             {% endfor %}
+        </div>
+        <div class="col-4">
+            <h3 class=" mt-3 display-6">Price BreakPoint</h3>
+            <div class=" list-group">
+                <div class="list-group-item list-group-item-action">
+                    <span class="fw-bold">Total Amount</span>
+                    <span class="float-end">₹{{object.get_total}} /-</span>
+                </div>
+                <div class="list-group-item list-group-item-action">
+                    <span class="fw-bold">Tax Gst(18%)</span>
+                    <span class="float-end"> +₹{{object.get_total_tax}} /-</span>
+                </div>
+                <div class="list-group-item list-group-item-action bg-success text-white">
+                    <span class="fw-bold">Total Discount</span>
+                    <span class="float-end">-₹{{object.get_total_discount_amount}} /-</span>
+                </div>
+                {% if object.coupon %}
+                <div class="list-group-item list-group-item-action text-success">
+                    <span class="fw-bold">Coupon discount</span>
+                    <span class="float-end">-₹500 /-<a href="" class="btn btn-info ms-2 btn-sm">X</a></span>
+                </div>
+               
+                {% endif %}
+                <div class="list-group-item list-group-item-action display-6">
+                    <span class="fw-bold mb-1">Total payable</span>
+                    <span class="float-end small">₹{{object.get_payable_amount}} /-</span>
+                </div>
+                
+                <div class="list-group-item list-group-item-action mt-4">
+                    <form action="" method="post" class="d-flex">
+                        {% csrf_token %}
+                        <input type="text" name="code" class="form-control">
+                        <input type="submit" class="btn btn-danger">
+                    </form>
+                </div>
+               
+            </div>
         </div>
     </div>
 </div>
