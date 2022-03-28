@@ -101,7 +101,7 @@ class OrderItem(models.Model):
         else:
             return self.get_total_price()
     def get_saved_amount(self):
-        return self.get_total_price() - self.get_total_discount_price()
+        return self.get_total_price() - self.get_final_price()
     
     def total_discount_percent(self):
         return int(100-(self.item.discount_price/self.item.price)*100)

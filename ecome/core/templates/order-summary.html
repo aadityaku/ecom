@@ -48,10 +48,12 @@
                     <span class="fw-bold">Tax Gst(18%)</span>
                     <span class="float-end"> +₹{{object.get_total_tax}} /-</span>
                 </div>
+                {% if object.get_total_discount_amount > 0.0%}
                 <div class="list-group-item list-group-item-action bg-success text-white">
                     <span class="fw-bold">Total Discount</span>
                     <span class="float-end">-₹{{object.get_total_discount_amount}} /-</span>
                 </div>
+                {% endif %}
                 {% if object.coupon %}
                 <div class="list-group-item list-group-item-action text-success">
                     <span class="fw-bold">Coupon discount</span>
@@ -64,15 +66,20 @@
                     <span class="float-end small">₹{{object.get_payable_amount}} /-</span>
                 </div>
                 
-                <div class="list-group-item list-group-item-action mt-4">
-                    <form action="" method="post" class="d-flex">
+            </div>
+            {% if object.coupon %}
+            <h2>This coupon is added <a href="{% url 'core:remove-coupon' %}" class="">Remove</a></h2>
+            {% else %}
+            <div class="card mt-3">
+                <div class="card-body">
+                    <form action="{% url 'core:add-coupon' %}" method="post" class="d-flex">
                         {% csrf_token %}
-                        <input type="text" name="code" class="form-control">
-                        <input type="submit" class="btn btn-danger">
+                        {{couponform}}
+                        <input type="submit" class="btn btn-danger" value="Go">
                     </form>
                 </div>
-               
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

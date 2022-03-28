@@ -10,5 +10,7 @@ urlpatterns = [
     path("add-to-cart/<slug>/",AddToCart.as_view(),name="add-to-cart"),
     path("remove-from-cart/<slug>/",RemoveFromCart.as_view(),name="remove-from-cart"),
     path("delete-from-cart/<slug>/",MinusItemCart.as_view(),name="delete-from-cart"),
+    path("add-coupon/",AddCoupon.as_view(),name="add-coupon"),
+    path("remove-coupon/",RemoveCoupon.as_view(),name="remove-coupon"),
     
 ]
