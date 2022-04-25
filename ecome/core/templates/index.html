@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-3">
     <div class="row">
-        <div class="col-3">
+        <div class="col-lg-3 mb-3 d-sm-block d-none">
            <div class="list-group">
                {% for i in categories %}
                     <a href="" class="list-group-item list-group-item-action">{{i.title}}</a>
@@ -11,11 +11,11 @@
               
            </div>
         </div>
-        <div class="col-9">
+        <div class="col-lg-9">
             <div class="row">
               
                 {% for item in object_list %}
-                        <div class="col-3">
+                        <div class="col-lg-3 mb-3">
                             <div class="card shadow">
                                 <img src="{{item.image.url}}" class="card-img-top" alt="" style="height:270px;">
                                 <div class="card-body">

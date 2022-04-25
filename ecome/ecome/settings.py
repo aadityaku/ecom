@@ -128,6 +128,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+RAZOR_KEY_ID = "rzp_test_FE5lNxbdOfAagF"
+RAZOR_KEY_SECRET = "mtPkzrQU31ZCZFzzLRW96z1h"
 
 MEDIA_ROOT=BASE_DIR/"media"
 MEDIA_URL="/media/"

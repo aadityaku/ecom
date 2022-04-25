@@ -1,17 +1,29 @@
-from .forms import CouponForm
-from pyexpat import model
 
+from multiprocessing import context
+import random
+import string
+
+from django.conf import settings
+
+from .forms import CouponForm,CheckoutForm
+from pyexpat import model
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from re import template
 from django.utils import timezone
-from turtle import title
+from django.views.decorators.csrf import csrf_exempt
+import razorpay
+from django.http import HttpResponseBadRequest
 from unicodedata import category
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
-from django.views.generic import ListView,DetailView,View,UpdateView
-from .models import Coupon, Item, ItemVariation, OrderItem,Order,Variation,Category
+from django.views.generic import ListView,DetailView,View,UpdateView,CreateView
+from .models import Address, Coupon, Item, ItemVariation, OrderItem,Order, Payment,Variation,Category
 from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
+razorpay_client = razorpay.Client(
+    auth=(settings.RAZOR_KEY_ID, settings.RAZOR_KEY_SECRET)
+)
 class HomeView(ListView):
     model=Item
     template_name="index.html"
@@ -180,7 +192,7 @@ class AddCoupon(View):
             form=CouponForm(self.request.POST or None)
             if form.is_valid():
                 try:
-                    code=form.cleaned_data.get("code")
+                    code=form.cleaned_data.get("code") 
                     if check_coupon(self.request,code):
                         order=Order.objects.get(user=self.request.user,ordered=False)
                         order.coupon = get_coupon(self.request,code)
@@ -199,11 +211,137 @@ class RemoveCoupon(View):
         order.save()
         return redirect("core:order-summary")
             
+class CheckoutView(View):
+
+    def get(self,*args, **kwargs):
+        address=Address.objects.filter(user=self.request.user)
+        context={}
+        try:
+            order=Order.objects.get(user=self.request.user,ordered=False)
+            form=CheckoutForm()
+            amount = order.get_payable_amount() * 100
+            currency = "INR"
+            DATA = {
+                "amount": amount,
+                "currency": currency,
+            }
+            order_id = razorpay_client.order.create(data=DATA)
+
+            context["order"] = order
+            context["form"] = form
+            context["address"] = address
+            context["razorpay_key"] = settings.RAZOR_KEY_ID
+            context["amount"] = order.get_payable_amount()
+            context["order_id"] = order_id["id"]
+            return render(
+                self.request,
+                "checkout.html",
+                context=context,
+            )
+           
+
+        except ObjectDoesNotExist:
+            return redirect("core:checkout")
+    def post(self,*args, **kwargs):
+        if self.request.method == "POST":
+            order=Order.objects.get(user=self.request.user,ordered=False)
+            form=CheckoutForm(self.request.POST or None)
+            #save_address=self.request.POST.get("save_address",None)
             
-        
+            if form.is_valid():
+                data=form.save(commit=False)
+                data.user=self.request.user
+                data.save()
+                order.address=data
+                order.save()
+                #makePayment(self,request)
+                return redirect("core:checkout")
+            else:
+                return redirect("core:checkout")
+        else:
+            return redirect("core:checkout")
 
+def save_Address_Action(r):
+    form=CheckoutForm()
+    address=Address.objects.filter(user=r.user)
+    if r.method == "POST":
+        order=Order.objects.get(user=r.user,ordered=False)
+        save_address=r.POST.get("save_address",None)
+        selected_address=Address.objects.get(id=save_address)
+        order.address = selected_address
 
+        order.save()
+        #makePayment(r)
+        return redirect("core:myorder")
+@login_required
+def myOrder(r):
+    order=Order.objects.filter(user=r.user,ordered=True)
+    return render(r,"myorder.html",{"order":order})   
 
+def create_ref_code():
+    return "".join(random.choices(string.ascii_lowercase + string.digits , k=20))
 
+@csrf_exempt
+def paymenthandler(request):
+
+    # only accept POST request.
+    if request.method == "POST":
+        try:
+            # print(request.POST.get("razorpay_payment_id"))
+            # get the required parameters from post request.
+            payment_id = request.POST.get("razorpay_payment_id", "")
+            razorpay_order_id = request.POST.get("razorpay_order_id", "")
+            signature = request.POST.get("razorpay_signature", "")
+            params_dict = {
+                "razorpay_order_id": razorpay_order_id,
+                "razorpay_payment_id": payment_id,
+                "razorpay_signature": signature,
+            }
+            print(params_dict)
+
+            # verify the payment signature.
+            result = razorpay_client.utility.verify_payment_signature(params_dict)
+            if result is None:  # set None to True
+                order = Order.objects.get(user=request.user, ordered=False)
+                amount = order.get_payable_amount() * 100
+                try:
+                    # capture the payemt
+                    razorpay_client.payment.capture(payment_id, amount)
+                    payment = Payment()
+                    payment.txt_id = "234565432345"
+                    payment.user = request.user
+                    payment.amount = order.get_payable_amount()
+
+                    payment.save()
+
+                    # assign the payment in order
+
+                    order_item = order.items.all()
+                    order_item.update(ordered=True)
+                    order.ordered = True
+                    order.payment = payment
+                    order.ref_code = create_ref_code()
+                    order.save()
+
+                    # render success page on successful caputre of payment
+                    return render(request, "paymentsuccess.html")
+
+                except:
+
+                    # if there is an error while capturing payment.
+                    return render(request, "paymentfail.html")
+            else:
+
+                # if signature verification fails.
+                return render(request, "paymentfail.html")
+        except:
+
+            # if we don't find the required parameters in POST data
+            print("parameter issue")
+            return HttpResponseBadRequest()
+    else:
+        print("post method issue")
+        # if other than POST request is made.
+        return HttpResponseBadRequest()
 
 

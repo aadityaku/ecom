@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid g-3 mt-3">
+    <div class="row">
+       <div class="col-lg-4">
+           <div class="list-group">
+               <a href="" class="list-group-item list-group-item-action">Completed Order</a>
+               <a href="" class="list-group-item list-group-item-action">procecessing Order</a>
+               <a href="" class="list-group-item list-group-item-action">Return Order</a>
+               <a href="" class="list-group-item list-group-item-action">Settings</a>
+           </div>
+       </div>
+        <div class="col-lg-8">
+            <h5>My Oreders</h5>
+            {% for odr in order %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <span class="float-start">Order Id : {{odr.ref_code}}</span>
+                    <span class="float-end">Date of oreder : {{odr.start_date}}</span>
+                </div>
+                <div class="card-body">
+
+               
+            {% for order_item in odr.items.all %}
+            <div class="media  mt-3 d-md-flex shadow p-2 d-block">
+                <img src="{{order_item.item.image.url}}" width="120px" class="media-image d-block shadow" alt="">
+                <div class="media-body ps-3">
+                    <h5 class="mt-5 fw-bolder">{{order_item.item.title}}</h5>
+                  <span class="d-block">
+                    {% if order_item.item_variations.exists %}
+                    {% for foo in order_item.item_variations.all %}
+                    <small class="text-muted">{{foo.variation.name}}:{{foo.value}}</small>
+                    {% endfor %}
+                    {% endif %}
+                  </span>
+                  <span class="d-inline-block my-2">
+                      {% if order_item.item.discount_price %}
+                        <p class="text-muted m-0 p-0 fw-normal d-inline">Rs.{{ order_item.get_total_discount_price }}</p>
+                        <p class="text-muted m-0 fw-normal d-inline"><del>Rs.{{order_item.get_total_price}}</del></p>
+                        <p class="text-success m-0 p-0 d-inline">Total Saved Amount: Rs.{{order_item.get_saved_amount}}({{order_item.total_discount_percent}}%)</p>
+                      {% else %}
+                      <p class="text-muted m-0 p-0 fw-normal d-inline">Rs.{{order_item.item.price}}</p>
+                      {% endif %}
+                  </span>
+                 
+                </div>
+            </div>
+            {% endfor %}
+             
+        </div>
+        
+        <div class="card-footer">
+            <div class="row">
+                <div class="col-8">
+                    Status:{% if odr.ordered and odr.being_delivered and odr.recieved and odr.refund_required and odr.refund_granted %}
+                    <span class="fw-bolder text-info">Request For  Rufund</span>
+                   
+                   {% elif odr.ordered and odr.being_delivered and odr.recieved and odr.refund_required  %}
+                    <span class="fw-bolder text-info">Cancelled $ Rufund</span>
+                   
+                     {% elif odr.ordered and odr.being_delivered and odr.recieved%}
+                    <span class="fw-bolder text-success">Delevired</span>
+                    
+                     {% elif odr.ordered and odr.being_delivered %}
+                    <span class="fw-bolder text-success">Processing</span>
+                    {% else %}
+                      <span class="text-info">Initialize</span>
+                    {% endif %}
+                    
+                </div>
+                <div class="col-4">
+                    <a href="" class="btn btn-danger mt-2 float-end">Order Cancel</a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+            {% endfor %}
+        </div>
+        
+        </div>
+    </div>
+</div>
+{% endblock  %}
