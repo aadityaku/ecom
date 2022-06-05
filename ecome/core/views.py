@@ -1,4 +1,5 @@
 
+
 from multiprocessing import context
 import random
 import string
@@ -20,6 +21,7 @@ from django.views import View
 from django.views.generic import ListView,DetailView,View,UpdateView,CreateView
 from .models import Address, Coupon, Item, ItemVariation, OrderItem,Order, Payment,Variation,Category
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages 
 # Create your views here.
 razorpay_client = razorpay.Client(
     auth=(settings.RAZOR_KEY_ID, settings.RAZOR_KEY_SECRET)
@@ -70,6 +72,7 @@ class AddToCart(LoginRequiredMixin,View):
             if order.items.filter(item__slug=item.slug).exists():
                 order_item.qty +=1
                 order_item.save()
+                messages.success(request,"your quantity is updated sussecfully")
                 return redirect("core:order-summary")
                 
             else:
@@ -85,6 +88,7 @@ class AddToCart(LoginRequiredMixin,View):
             ordered_date=timezone.now()
             order=Order.objects.create(user=request.user,start_date=ordered_date)
             order.items.add(order_item)
+            messages.success(request,"your order is successfully")
             return redirect("core:order-summary")
 
 class OrderSummary(LoginRequiredMixin,View):

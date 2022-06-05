@@ -7,6 +7,7 @@ from tkinter.tix import Balloon
 from django.urls import reverse
 from pydoc import describe
 from django.db import models
+from django.contrib.auth.models import User
 
 class Category(models.Model):
     title=models.CharField(max_length=200)

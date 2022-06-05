@@ -11,6 +11,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     search_fields=['user__username','ref_code']
     actions=[make_accepted_refund]
+
 admin.site.register(Category)
 admin.site.register(Brand)
 admin.site.register(Item)
